@@ -34,13 +34,13 @@ public class RobotConfig {
     public static double FLY_KS = 0.04;
     public static double FLY_KV = 0.00036;
     public static double FLY_KP = 0.0009;
-    public static double FLY_KI = 0.00008;
+    public static double FLY_KI = 0.0006;
     public static double NOMINAL_VOLTAGE = 12.0;
-    public static double READY_BAND = 0.025;
-    public static double LEAVE_BAND = 0.05;
+    public static double READY_BAND = 0.03;
+    public static double LEAVE_BAND = 0.06;
     public static double READY_HOLD_MS = 80;
     public static double BOOST_BELOW = 0.12;
-    public static double SHOT_DIP = 0.035;
+    public static double SHOT_DIP = 0.045;
     public static double IDLE_FRACTION = 0.6;
 
     public static double PITCH_MIN_DEG = 60;
@@ -59,6 +59,7 @@ public class RobotConfig {
     public static double JAM_DOWN = 0.75;
 
     public static double INTAKE_POWER = 1.0;
+    public static double INTAKE_SLOW_POWER = 0.35;
     public static double INTAKE_EJECT_POWER = -0.8;
     public static double EJECT_MS = 450;
     public static double MERGE_HOLD_MS = 650;
@@ -104,5 +105,7 @@ public class RobotConfig {
     public static double TIP_SURE_G = 199;
     public static double TIP_MAYBE_G = 174;
     public static double STAGED_NECTAR_G = 123.9;
+    // grams your partner banks in the far CELL during auto (0 if unsure)
+    public static double PARTNER_AUTO_G = 0;
     public static int MAX_HELD = 4;
 }

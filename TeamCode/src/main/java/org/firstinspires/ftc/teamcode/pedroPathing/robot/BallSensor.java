@@ -13,6 +13,7 @@ public class BallSensor {
     private double distMm = 999, hue, sat;
     private double sumR, sumG, sumB;
     private int good;
+    private int arrivals;
 
     public BallSensor(HardwareMap hw, String name) {
         sensor = hw.get(RevColorSensorV3.class, name);
@@ -42,6 +43,7 @@ public class BallSensor {
         if (good >= RobotConfig.COLOR_SAMPLES && ball == Ball.NONE) {
             double[] avg = hueSat(sumR / good, sumG / good, sumB / good);
             ball = classify(avg[0], avg[1]);
+            if (ball != Ball.NONE) arrivals++;
         }
     }
 
@@ -68,6 +70,10 @@ public class BallSensor {
 
     public boolean present() {
         return present;
+    }
+
+    public int arrivals() {
+        return arrivals;
     }
 
     public Ball ball() {

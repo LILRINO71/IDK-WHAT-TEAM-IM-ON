@@ -59,7 +59,8 @@ public class Flywheel {
         }
         double target = targetWheelRpm * ticksPerWheelRev() / 60;
         double err = target - tps;
-        integral = clamp(integral + err * dt, -2000, 2000);
+        double iMax = RobotConfig.FLY_KI > 0 ? 0.15 / RobotConfig.FLY_KI : 0;
+        integral = clamp(integral + err * dt, -iMax, iMax);
         double p = RobotConfig.FLY_KS + RobotConfig.FLY_KV * target + RobotConfig.FLY_KP * err + RobotConfig.FLY_KI * integral;
         p *= RobotConfig.NOMINAL_VOLTAGE / Math.max(8, volts);
         if (err > RobotConfig.BOOST_BELOW * target) p = 1;

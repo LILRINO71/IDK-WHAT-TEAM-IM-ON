@@ -16,6 +16,7 @@ public class Intake {
         long untilMs;
         long claimUntilMs;
         long goneSinceMs = -1;
+        int seenArrivals;
 
         Side(HardwareMap hw, String name, String motorName, boolean reversed, String sensorName) {
             this.name = name;
@@ -26,13 +27,17 @@ public class Intake {
         double step(Mode mode, Inventory inv, Alliance alliance, long now) {
             if (mode == Mode.OFF) {
                 state = "idle";
+                seenArrivals = -1;
                 return 0;
             }
             if (mode == Mode.EJECT) {
                 state = "idle";
+                seenArrivals = -1;
                 return RobotConfig.INTAKE_EJECT_POWER;
             }
             sensor.update();
+            Ball b = sensor.ball();
+            boolean fresh = b != Ball.NONE && sensor.arrivals() != seenArrivals;
             switch (state) {
                 case "eject":
                     if (now < untilMs) return RobotConfig.INTAKE_EJECT_POWER;
@@ -42,31 +47,37 @@ public class Intake {
                     if (other.claimUntilMs > now) return 0;
                     return accept(waiting, inv, now);
                 case "feed":
+                    if (fresh) return decide(b, inv, alliance, now);
                     if (sensor.present()) {
                         goneSinceMs = -1;
                     } else {
                         if (goneSinceMs < 0) goneSinceMs = now;
-                        if (now - goneSinceMs > 60) state = "idle";
+                        if (now - goneSinceMs > 40) state = "idle";
                     }
                     return RobotConfig.INTAKE_POWER;
                 default:
-                    Ball b = sensor.ball();
-                    if (b == Ball.NONE) return inv.full() ? 0 : RobotConfig.INTAKE_POWER;
-                    if (!b.ours(alliance)) {
-                        rejectedOpponent = true;
-                        return eject(now);
-                    }
-                    if (inv.full()) {
-                        rejectedFull = true;
-                        return eject(now);
-                    }
-                    if (other.claimUntilMs > now) {
-                        waiting = b;
-                        state = "wait";
-                        return 0;
-                    }
-                    return accept(b, inv, now);
+                    if (fresh) return decide(b, inv, alliance, now);
+                    if (inv.full()) return 0;
+                    return sensor.present() ? RobotConfig.INTAKE_SLOW_POWER : RobotConfig.INTAKE_POWER;
             }
+        }
+
+        private double decide(Ball b, Inventory inv, Alliance alliance, long now) {
+            seenArrivals = sensor.arrivals();
+            if (!b.ours(alliance)) {
+                rejectedOpponent = true;
+                return eject(now);
+            }
+            if (inv.full()) {
+                rejectedFull = true;
+                return eject(now);
+            }
+            if (other.claimUntilMs > now) {
+                waiting = b;
+                state = "wait";
+                return 0;
+            }
+            return accept(b, inv, now);
         }
 
         private double eject(long now) {

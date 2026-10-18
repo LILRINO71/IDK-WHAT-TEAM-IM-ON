@@ -19,13 +19,15 @@ import org.firstinspires.ftc.teamcode.pedroPathing.robot.RobotConfig;
 public class BiobuzzAuto extends OpMode {
     enum Routine { FULL, PRELOAD_AND_PARK, PRELOAD_ONLY }
 
-    enum Step { AIM_PRELOAD, WAIT_TIP, SWEEP, TO_ZONE, FIRE_ZONE, PARK, DONE }
+    enum Step { AIM_PRELOAD, WAIT_TIP, SWEEP, TO_FIRE, FIRE, PARK, DONE }
 
     // red poses in field inches (x toward the blue wall, y away from the audience); blue is mirrored
     static final double[] START = {-40, -61.5, 90};
-    static final double[] SWEEP_A = {-38, -33};
-    static final double[] SWEEP_B = {-4, -33};
+    static final double SWEEP_X0 = -38, SWEEP_X1 = -4, SWEEP_Y = 33;
     static final double[] ZONE = {-58, 38};
+    static final double[] AUDIENCE_POCKET = {-40, -52};
+    // latest time a second cycle may start and still fire and park
+    static final double LAST_CYCLE_START_S = 19;
 
     private Robot robot;
     private Alliance alliance = Alliance.RED;
@@ -35,6 +37,9 @@ public class BiobuzzAuto extends OpMode {
     private boolean firstLoop;
     private double heldHeading = Double.NaN;
     private boolean lastUp, lastDown;
+    private int cycles;
+    private int flipsSeen;
+    private int spillSide;
 
     @Override
     public void init() {
@@ -69,6 +74,8 @@ public class BiobuzzAuto extends OpMode {
     @Override
     public void start() {
         startMs = Hub.nowMs();
+        flipsSeen = robot.hive.flips(alliance);
+        spillSide = redUpSide();
         go(Step.AIM_PRELOAD);
     }
 
@@ -91,43 +98,54 @@ public class BiobuzzAuto extends OpMode {
                 break;
             case WAIT_TIP:
                 robot.wantAim = robot.wantFire = false;
-                boolean flipped = robot.hive.flips(alliance) > 0;
-                if (!flipped && inStep > 3.5 && robot.gramsInUpCell >= RobotConfig.TIP_SURE_G) {
+                if (first) spillSide = robot.hive.flips(alliance) == flipsSeen ? redUpSide() : -redUpSide();
+                boolean tipped = robot.hive.flips(alliance) > flipsSeen;
+                double banked = robot.gramsInUpCell + (cycles == 0 ? 0 : RobotConfig.PARTNER_AUTO_G);
+                if (!tipped && inStep > 3.0 && banked >= RobotConfig.TIP_SURE_G) {
                     robot.hive.manualFlip(alliance);
-                    flipped = true;
+                    tipped = true;
                 }
-                if (flipped || inStep > 4.5) {
+                if (tipped) {
+                    flipsSeen = robot.hive.flips(alliance);
                     if (routine == Routine.PRELOAD_ONLY) go(Step.DONE);
-                    else if (routine == Routine.PRELOAD_AND_PARK) {
-                        robot.follower.followPath(toZone(), true);
-                        go(Step.PARK);
-                    } else {
+                    else if (routine == Routine.PRELOAD_AND_PARK || cycles >= 2 || t > LAST_CYCLE_START_S) startPark();
+                    else {
                         robot.follower.setMaxPower(0.6);
-                        robot.follower.followPath(sweep(), true);
+                        robot.follower.followPath(sweep(spillSide), true);
                         go(Step.SWEEP);
                     }
+                } else if (inStep > 4.5) {
+                    if (routine == Routine.PRELOAD_ONLY) go(Step.DONE);
+                    else startPark();
                 }
                 break;
             case SWEEP:
                 robot.intakeMode = Intake.Mode.IN;
                 if (!robot.follower.isBusy() || robot.inv.full() || inStep > 6) {
                     robot.follower.setMaxPower(1);
-                    robot.follower.followPath(toZone(), true);
-                    go(Step.TO_ZONE);
+                    robot.follower.followPath(toFiringPose(), true);
+                    go(Step.TO_FIRE);
                 }
                 break;
-            case TO_ZONE:
+            case TO_FIRE:
                 robot.intakeMode = robot.inv.full() ? Intake.Mode.OFF : Intake.Mode.IN;
-                robot.wantAim = distanceTo(ZONE) < 24;
-                if (!robot.follower.isBusy() || inStep > 5) go(Step.FIRE_ZONE);
+                robot.wantAim = distanceTo(firingSpot()) < 24;
+                if (!robot.follower.isBusy() || inStep > 5) go(Step.FIRE);
                 break;
-            case FIRE_ZONE:
+            case FIRE:
                 robot.intakeMode = Intake.Mode.OFF;
                 aimInPlace(first);
                 robot.wantAim = robot.wantFire = robot.inv.held() > 0;
-                if (robot.inv.held() == 0 || inStep > 7) go(Step.DONE);
+                if (robot.inv.held() == 0 || inStep > 6) {
+                    cycles++;
+                    if (routine == Routine.FULL && cycles < 2 && t < LAST_CYCLE_START_S) go(Step.WAIT_TIP);
+                    else if (inZone()) go(Step.DONE);
+                    else startPark();
+                }
                 break;
             case PARK:
+                robot.wantAim = robot.wantFire = false;
+                robot.intakeMode = Intake.Mode.OFF;
                 if (!robot.follower.isBusy() || inStep > 6) go(Step.DONE);
                 break;
             case DONE:
@@ -137,7 +155,7 @@ public class BiobuzzAuto extends OpMode {
                 break;
         }
 
-        telemetry.addData("auto", "%s  %.1f s  (step %.1f s)", step, t, inStep);
+        telemetry.addData("auto", "%s  %.1f s  (step %.1f s, cycles %d)", step, t, inStep, cycles);
         robot.report(telemetry);
         telemetry.update();
     }
@@ -153,6 +171,29 @@ public class BiobuzzAuto extends OpMode {
         stepMs = Hub.nowMs();
         firstLoop = true;
         heldHeading = Double.NaN;
+    }
+
+    private void startPark() {
+        robot.follower.setMaxPower(1);
+        robot.follower.followPath(toPose(ZONE, aimDegFrom(ZONE, 1)), true);
+        go(Step.PARK);
+    }
+
+    private int redUpSide() {
+        int up = robot.hive.upSide(alliance);
+        return alliance == Alliance.RED ? up : -up;
+    }
+
+    private double[] firingSpot() {
+        return redUpSide() > 0 ? ZONE : AUDIENCE_POCKET;
+    }
+
+    private boolean inZone() {
+        return distanceTo(ZONE) < 6;
+    }
+
+    private double aimDegFrom(double[] spot, int redUp) {
+        return Math.toDegrees(Math.atan2(redUp * Field.MOUTH_OUT - spot[1], -Field.HIVE_X - spot[0]));
     }
 
     private void aimInPlace(boolean first) {
@@ -178,23 +219,36 @@ public class BiobuzzAuto extends OpMode {
         return Math.hypot(goal.getX() - p.getX(), goal.getY() - p.getY());
     }
 
-    private PathChain sweep() {
+    private PathChain sweep(int redSpillSide) {
+        double y = SWEEP_Y * redSpillSide;
         Pose here = robot.follower.getPose();
-        Pose a = at(SWEEP_A[0], SWEEP_A[1], 0), b = at(SWEEP_B[0], SWEEP_B[1], 0);
+        Pose a = at(SWEEP_X0, y, 0), b = at(SWEEP_X1, y, 0);
         return robot.follower.pathBuilder()
-                .addPath(new BezierCurve(here, at(-40, -45, 0), a))
+                .addPath(new BezierCurve(here, at(-42, y + 12 * redSpillSide, 0), a))
                 .setLinearHeadingInterpolation(here.getHeading(), a.getHeading())
                 .addPath(new BezierLine(a, b))
                 .setConstantHeadingInterpolation(a.getHeading())
                 .build();
     }
 
-    private PathChain toZone() {
+    private PathChain toFiringPose() {
+        double[] spot = firingSpot();
+        return toPose(spot, aimDegFrom(spot, redUpSide()));
+    }
+
+    private PathChain toPose(double[] spot, double headingDeg) {
         Pose here = robot.follower.getPose();
-        double aimDeg = Math.toDegrees(Math.atan2(Field.MOUTH_OUT - ZONE[1], -Field.HIVE_X - ZONE[0]));
-        Pose end = at(ZONE[0], ZONE[1], aimDeg);
+        Pose end = at(spot[0], spot[1], headingDeg);
+        double hereY = (alliance == Alliance.RED ? 1 : -1) * Field.y(here);
+        double side = Math.signum(hereY == 0 ? -1 : hereY), goal = Math.signum(spot[1]);
+        if (side == goal) {
+            return robot.follower.pathBuilder()
+                    .addPath(new BezierCurve(here, at(-50, (hereY + spot[1]) / 2, 0), end))
+                    .setLinearHeadingInterpolation(here.getHeading(), end.getHeading())
+                    .build();
+        }
         return robot.follower.pathBuilder()
-                .addPath(new BezierCurve(here, at(-60, -48, 0), at(-62, 20, 0), end))
+                .addPath(new BezierCurve(here, at(-60, 48 * side, 0), at(-62, 20 * goal, 0), end))
                 .setLinearHeadingInterpolation(here.getHeading(), end.getHeading())
                 .build();
     }
