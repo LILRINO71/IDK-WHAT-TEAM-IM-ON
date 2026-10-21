@@ -5,6 +5,7 @@ import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.Pose;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
@@ -18,11 +19,13 @@ public class Meet0TeleOp extends OpMode {
     public static String ROLLER_A = "rollerA";
     public static String ROLLER_B = "rollerB";
     public static String GATE = "gate";
+    public static String FEEDER = "feed";
 
     // flip any of these if that mechanism runs backwards
     public static boolean INTAKE_REVERSED = true;
     public static boolean ROLLER_A_REVERSED = false;
     public static boolean ROLLER_B_REVERSED = true;
+    public static boolean FEEDER_REVERSED = false;
 
     public static double TICKS_PER_REV = 28;
     public static double ROLLER_RPM = 3300;
@@ -40,10 +43,14 @@ public class Meet0TeleOp extends OpMode {
     public static double INTAKE_POWER = 1.0;
     public static double FEED_POWER = 0.7;
     public static double EJECT_POWER = -0.8;
+    // zip-tie feeder: flicks balls on the floor forward to the roller
+    public static double FEEDER_POWER = 1.0;
+    public static double FEEDER_EJECT_POWER = -0.6;
 
     private Follower follower;
     private DcMotorEx intake, rollerA, rollerB;
     private Servo gate;
+    private CRServo feeder;
     private boolean rollerOn;
     private double rpm;
     private boolean lastA, lastUp, lastDown, lastBack;
@@ -61,6 +68,8 @@ public class Meet0TeleOp extends OpMode {
         }
         gate = hardwareMap.get(Servo.class, GATE);
         gate.setPosition(GATE_CLOSED);
+        feeder = hardwareMap.get(CRServo.class, FEEDER);
+        feeder.setDirection(FEEDER_REVERSED ? DcMotorSimple.Direction.REVERSE : DcMotorSimple.Direction.FORWARD);
         rpm = ROLLER_RPM;
         telemetry.setMsTransmissionInterval(50);
     }
@@ -97,10 +106,12 @@ public class Meet0TeleOp extends OpMode {
 
         boolean feeding = shoot && ready;
         gate.setPosition(feeding ? GATE_OPEN : GATE_CLOSED);
+        boolean eject = gamepad1.left_trigger > 0.2 || gamepad2.left_trigger > 0.2;
         if (feeding) intake.setPower(FEED_POWER);
         else if (gamepad1.right_trigger > 0.2 || gamepad2.right_trigger > 0.2) intake.setPower(INTAKE_POWER);
-        else if (gamepad1.left_trigger > 0.2 || gamepad2.left_trigger > 0.2) intake.setPower(EJECT_POWER);
+        else if (eject) intake.setPower(EJECT_POWER);
         else intake.setPower(0);
+        feeder.setPower(feeding ? FEEDER_POWER : (eject ? FEEDER_EJECT_POWER : 0));
 
         if (shoot && !ready) gamepad1.rumble(50);
         telemetry.addData("roller", "%s  target %.0f rpm  A %.0f  B %.0f", ready ? "READY" : (spin ? "spinning up" : "off"), rpm, rpmA, rpmB);
@@ -114,6 +125,7 @@ public class Meet0TeleOp extends OpMode {
         rollerA.setVelocity(0);
         rollerB.setVelocity(0);
         intake.setPower(0);
+        feeder.setPower(0);
     }
 
     private DcMotorEx motor(String name, boolean reversed) {
