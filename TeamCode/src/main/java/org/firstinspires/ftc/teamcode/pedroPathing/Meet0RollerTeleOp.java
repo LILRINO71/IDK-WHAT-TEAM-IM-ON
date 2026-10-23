@@ -30,6 +30,8 @@ public class Meet0RollerTeleOp extends OpMode {
     public static double TICKS_PER_REV = 28;
     public static double ROLLER_RPM = 3300;
     public static double RPM_STEP = 50;
+    // extra roller speed while LB is held for a NECTAR, tune on the field
+    public static double NECTAR_BOOST = 0.04;
     public static double READY_BAND = 0.03;
     public static double ROLLER_P = 12;
     public static double ROLLER_I = 0.5;
@@ -97,12 +99,14 @@ public class Meet0RollerTeleOp extends OpMode {
 
         boolean shoot = gamepad1.right_bumper || gamepad2.right_bumper;
         boolean spin = rollerOn || shoot;
-        double tps = spin ? rpm * TICKS_PER_REV / 60 : 0;
+        boolean nectar = gamepad1.left_bumper || gamepad2.left_bumper;
+        double target = nectar ? rpm * (1 + NECTAR_BOOST) : rpm;
+        double tps = spin ? target * TICKS_PER_REV / 60 : 0;
         rollerA.setVelocity(tps);
         rollerB.setVelocity(tps);
         double rpmA = rollerA.getVelocity() * 60 / TICKS_PER_REV;
         double rpmB = rollerB.getVelocity() * 60 / TICKS_PER_REV;
-        boolean ready = spin && Math.abs(rpmA - rpm) < rpm * READY_BAND && Math.abs(rpmB - rpm) < rpm * READY_BAND;
+        boolean ready = spin && Math.abs(rpmA - target) < target * READY_BAND && Math.abs(rpmB - target) < target * READY_BAND;
 
         boolean feeding = shoot && ready;
         gate.setPosition(feeding ? GATE_OPEN : GATE_CLOSED);
@@ -114,9 +118,9 @@ public class Meet0RollerTeleOp extends OpMode {
         feeder.setPower(feeding ? FEEDER_POWER : (eject ? FEEDER_EJECT_POWER : 0));
 
         if (shoot && !ready) gamepad1.rumble(50);
-        telemetry.addData("roller", "%s  target %.0f rpm  A %.0f  B %.0f", ready ? "READY" : (spin ? "spinning up" : "off"), rpm, rpmA, rpmB);
+        telemetry.addData("roller", "%s  target %.0f rpm%s  A %.0f  B %.0f", ready ? "READY" : (spin ? "spinning up" : "off"), target, nectar ? " (NECTAR)" : "", rpmA, rpmB);
         telemetry.addData("gate", feeding ? "open" : "closed");
-        telemetry.addData("controls", "A roller on/off, hold RB to shoot, RT intake, LT eject, dpad up/down rpm, back reset rpm");
+        telemetry.addData("controls", "A roller on/off, hold RB to shoot, hold LB for a NECTAR, RT intake, LT eject, dpad up/down rpm, back reset rpm");
         telemetry.update();
     }
 
