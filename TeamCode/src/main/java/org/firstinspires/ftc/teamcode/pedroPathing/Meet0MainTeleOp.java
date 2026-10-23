@@ -37,6 +37,10 @@ public class Meet0MainTeleOp extends LinearOpMode {
     public static double SHOOTER_D = 0;
     public static double SHOOTER_F = 13;
 
+    // 435 rpm transfer motor (config name "transfer"), runs while feeding and backwards on eject
+    public static double TRANSFER_POWER = 1.0;
+    public static boolean TRANSFER_REVERSED = false;
+
     protected boolean useEncoders() {
         return false;
     }
@@ -50,6 +54,12 @@ public class Meet0MainTeleOp extends LinearOpMode {
         DcMotorEx intake = hardwareMap.get(DcMotorEx.class, "intake");
         DcMotorEx outtake1 = hardwareMap.get(DcMotorEx.class, "outtake1");
         DcMotorEx outtake2 = hardwareMap.get(DcMotorEx.class, "outtake2");
+        DcMotorEx transfer = hardwareMap.tryGet(DcMotorEx.class, "transfer");
+        if (transfer != null) {
+            transfer.setDirection(TRANSFER_REVERSED ? DcMotorSimple.Direction.REVERSE : DcMotorSimple.Direction.FORWARD);
+            transfer.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+            transfer.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        }
 
         frontLeft.setDirection(DcMotorSimple.Direction.REVERSE);
         backLeft.setDirection(DcMotorSimple.Direction.REVERSE);
@@ -168,13 +178,16 @@ public class Meet0MainTeleOp extends LinearOpMode {
             }
 
             boolean feed = AUTO_FEED && shoot && ready;
+            boolean eject = gamepad1.left_trigger > 0.1 || gamepad2.left_trigger > 0.1;
             if (gamepad1.right_trigger > 0.1 || gamepad2.right_trigger > 0.1 || feed) intake.setPower(1.0);
-            else if (gamepad1.left_trigger > 0.1 || gamepad2.left_trigger > 0.1) intake.setPower(-1.0);
+            else if (eject) intake.setPower(-1.0);
             else intake.setPower(0.0);
+            if (transfer != null) transfer.setPower(feed ? TRANSFER_POWER : (eject ? -TRANSFER_POWER : 0.0));
             if (shoot && !ready) gamepad1.rumble(50);
 
             telemetry.addData("MAIN TeleOp", mode);
             telemetry.addData("shooter", "%s  %s", ready ? "READY" : (spin ? "spinning up" : "off"), shooter);
+            telemetry.addData("transfer", transfer == null ? "not in the config" : (feed ? "feeding" : (eject ? "reverse" : "stopped")));
             if (useEncoders()) {
                 telemetry.addData("speeds", "POLLEN %.0f rpm, NECTAR +%.0f%% = %.0f rpm", rpm, boost * 100, rpm * (1 + boost));
                 telemetry.addData("put in the code", "SHOOTER_RPM = %.0f, NECTAR_BOOST = %.2f", rpm, boost);
