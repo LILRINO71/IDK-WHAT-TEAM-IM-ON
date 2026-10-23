@@ -12,7 +12,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.Position;
 
 import java.util.Arrays;
 
-@TeleOp(name = "AprilTag Check")
+@TeleOp(name = "Tool - AprilTag Check (Limelight)", group = "3 Tools")
 public class AprilTagCheck extends LinearOpMode {
 
     // the 16 goal tags, four per hive cell

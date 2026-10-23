@@ -9,8 +9,8 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.IMU;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 
-@TeleOp(name = "FCD Meet 0 (Field Centric - No Lock)")
-public class Meet0teleOP extends LinearOpMode {
+@TeleOp(name = "Meet0 #3 Backup - old team TeleOp", group = "1 Meet 0")
+public class Meet0BackupTeleOp extends LinearOpMode {
 
     private static final double STICK_DEADBAND = 0.05;
 

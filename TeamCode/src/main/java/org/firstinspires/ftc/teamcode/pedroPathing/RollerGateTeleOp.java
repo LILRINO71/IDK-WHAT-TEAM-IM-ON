@@ -12,8 +12,8 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
 
 @Configurable
-@TeleOp(name = "Meet 0 TeleOp", group = "BIOBUZZ")
-public class Meet0RollerTeleOp extends OpMode {
+@TeleOp(name = "Later - Roller + Gate + Feeder TeleOp", group = "2 Later (not built yet)")
+public class RollerGateTeleOp extends OpMode {
     // names in the Driver Hub robot configuration
     public static String INTAKE = "backIntake";
     public static String ROLLER_A = "rollerA";

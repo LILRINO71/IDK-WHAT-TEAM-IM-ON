@@ -11,7 +11,7 @@ import org.firstinspires.ftc.teamcode.pedroPathing.robot.RobotConfig;
 import org.firstinspires.ftc.teamcode.pedroPathing.robot.Shooter;
 import org.firstinspires.ftc.teamcode.pedroPathing.robot.ShotTable;
 
-@TeleOp(name = "Shooter Tuner", group = "BIOBUZZ")
+@TeleOp(name = "Later - Shooter Tuner", group = "2 Later (not built yet)")
 public class ShooterTuner extends OpMode {
     private Hub hub;
     private Shooter shooter;

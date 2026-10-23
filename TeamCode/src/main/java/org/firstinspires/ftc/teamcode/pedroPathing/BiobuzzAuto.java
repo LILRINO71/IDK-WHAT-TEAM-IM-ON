@@ -15,7 +15,7 @@ import org.firstinspires.ftc.teamcode.pedroPathing.robot.Intake;
 import org.firstinspires.ftc.teamcode.pedroPathing.robot.Robot;
 import org.firstinspires.ftc.teamcode.pedroPathing.robot.RobotConfig;
 
-@Autonomous(name = "BIOBUZZ Auto", group = "BIOBUZZ", preselectTeleOp = "BIOBUZZ TeleOp")
+@Autonomous(name = "Later - Full Robot Auto", group = "2 Later (not built yet)", preselectTeleOp = "Later - Full Robot TeleOp")
 public class BiobuzzAuto extends OpMode {
     enum Routine { FULL, PRELOAD_AND_PARK, PRELOAD_ONLY }
 

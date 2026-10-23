@@ -9,10 +9,10 @@ import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
 
 import java.util.Set;
 
-@TeleOp(name = "Meet 0 Motor Test")
+@TeleOp(name = "Meet0 #4 Motor Test", group = "1 Meet 0")
 public class Meet0MotorTest extends LinearOpMode {
 
-    // same names and directions as the Meet 0 TeleOp
+    // same names and directions as the MAIN TeleOp
     private static final String[] NAMES = {"FL", "BL", "FR", "BR", "intake", "outtake1", "outtake2"};
     private static final boolean[] REVERSED = {true, true, false, false, false, false, false};
 

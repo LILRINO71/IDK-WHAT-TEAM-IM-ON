@@ -18,7 +18,7 @@ import org.firstinspires.ftc.teamcode.pedroPathing.robot.RobotConfig;
 import java.util.ArrayList;
 import java.util.List;
 
-@TeleOp(name = "Hardware Check", group = "BIOBUZZ")
+@TeleOp(name = "Later - Hardware Check (full robot)", group = "2 Later (not built yet)")
 public class HardwareCheck extends OpMode {
     private final List<String> motorNames = new ArrayList<>();
     private final List<DcMotorEx> motors = new ArrayList<>();

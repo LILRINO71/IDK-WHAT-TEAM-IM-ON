@@ -11,7 +11,7 @@ import org.firstinspires.ftc.teamcode.pedroPathing.robot.Intake;
 import org.firstinspires.ftc.teamcode.pedroPathing.robot.PoseStore;
 import org.firstinspires.ftc.teamcode.pedroPathing.robot.Robot;
 
-@TeleOp(name = "BIOBUZZ TeleOp", group = "BIOBUZZ")
+@TeleOp(name = "Later - Full Robot TeleOp", group = "2 Later (not built yet)")
 public class BiobuzzTeleOp extends OpMode {
     private Robot robot;
     private boolean fieldCentric = true;
