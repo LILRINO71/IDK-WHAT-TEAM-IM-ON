@@ -30,8 +30,9 @@ public class Meet0RollerTeleOp extends OpMode {
     public static double TICKS_PER_REV = 28;
     public static double ROLLER_RPM = 3300;
     public static double RPM_STEP = 50;
-    // extra roller speed while LB is held for a NECTAR, tune on the field
+    // extra roller speed while LB is held for a NECTAR, copy the number the driver hub shows
     public static double NECTAR_BOOST = 0.04;
+    public static double BOOST_STEP = 0.01;
     public static double READY_BAND = 0.03;
     public static double ROLLER_P = 12;
     public static double ROLLER_I = 0.5;
@@ -54,8 +55,8 @@ public class Meet0RollerTeleOp extends OpMode {
     private Servo gate;
     private CRServo feeder;
     private boolean rollerOn;
-    private double rpm;
-    private boolean lastA, lastUp, lastDown, lastBack;
+    private double rpm, boost;
+    private boolean lastA, lastUp, lastDown, lastLeft, lastRight, lastBack;
 
     @Override
     public void init() {
@@ -73,6 +74,7 @@ public class Meet0RollerTeleOp extends OpMode {
         feeder = hardwareMap.get(CRServo.class, FEEDER);
         feeder.setDirection(FEEDER_REVERSED ? DcMotorSimple.Direction.REVERSE : DcMotorSimple.Direction.FORWARD);
         rpm = ROLLER_RPM;
+        boost = NECTAR_BOOST;
         telemetry.setMsTransmissionInterval(50);
     }
 
@@ -91,16 +93,23 @@ public class Meet0RollerTeleOp extends OpMode {
         if (gamepad1.a && !lastA) rollerOn = !rollerOn;
         if (gamepad1.dpad_up && !lastUp) rpm += RPM_STEP;
         if (gamepad1.dpad_down && !lastDown) rpm -= RPM_STEP;
-        if (gamepad1.back && !lastBack) rpm = ROLLER_RPM;
+        if (gamepad1.dpad_right && !lastRight) boost += BOOST_STEP;
+        if (gamepad1.dpad_left && !lastLeft) boost = Math.max(0, boost - BOOST_STEP);
+        if (gamepad1.back && !lastBack) {
+            rpm = ROLLER_RPM;
+            boost = NECTAR_BOOST;
+        }
         lastA = gamepad1.a;
         lastUp = gamepad1.dpad_up;
         lastDown = gamepad1.dpad_down;
+        lastLeft = gamepad1.dpad_left;
+        lastRight = gamepad1.dpad_right;
         lastBack = gamepad1.back;
 
         boolean shoot = gamepad1.right_bumper || gamepad2.right_bumper;
         boolean spin = rollerOn || shoot;
         boolean nectar = gamepad1.left_bumper || gamepad2.left_bumper;
-        double target = nectar ? rpm * (1 + NECTAR_BOOST) : rpm;
+        double target = nectar ? rpm * (1 + boost) : rpm;
         double tps = spin ? target * TICKS_PER_REV / 60 : 0;
         rollerA.setVelocity(tps);
         rollerB.setVelocity(tps);
@@ -120,7 +129,9 @@ public class Meet0RollerTeleOp extends OpMode {
         if (shoot && !ready) gamepad1.rumble(50);
         telemetry.addData("roller", "%s  target %.0f rpm%s  A %.0f  B %.0f", ready ? "READY" : (spin ? "spinning up" : "off"), target, nectar ? " (NECTAR)" : "", rpmA, rpmB);
         telemetry.addData("gate", feeding ? "open" : "closed");
-        telemetry.addData("controls", "A roller on/off, hold RB to shoot, hold LB for a NECTAR, RT intake, LT eject, dpad up/down rpm, back reset rpm");
+        telemetry.addData("speeds", "POLLEN %.0f rpm, NECTAR +%.0f%% = %.0f rpm", rpm, boost * 100, rpm * (1 + boost));
+        telemetry.addData("put in the code", "ROLLER_RPM = %.0f, NECTAR_BOOST = %.2f", rpm, boost);
+        telemetry.addData("controls", "A roller on/off, hold RB to shoot, hold LB for a NECTAR, RT intake, LT eject, dpad up/down POLLEN rpm, dpad left/right NECTAR boost, back reset");
         telemetry.update();
     }
 
