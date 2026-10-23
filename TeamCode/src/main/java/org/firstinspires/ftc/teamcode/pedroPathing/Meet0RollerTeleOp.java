@@ -13,7 +13,7 @@ import com.qualcomm.robotcore.hardware.Servo;
 
 @Configurable
 @TeleOp(name = "Meet 0 TeleOp", group = "BIOBUZZ")
-public class Meet0TeleOp extends OpMode {
+public class Meet0RollerTeleOp extends OpMode {
     // names in the Driver Hub robot configuration
     public static String INTAKE = "backIntake";
     public static String ROLLER_A = "rollerA";
