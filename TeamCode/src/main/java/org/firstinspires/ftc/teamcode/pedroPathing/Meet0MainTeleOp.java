@@ -26,8 +26,8 @@ public class Meet0MainTeleOp extends LinearOpMode {
     public static double NECTAR_BOOST = 0.04;
     public static double BOOST_STEP = 0.01;
 
-    // false = RB only spins the shooter and you feed with RT yourself
-    public static boolean AUTO_FEED = true;
+    // how long the intake runs backwards after LT is pressed
+    public static double EJECT_SECONDS = 1.0;
     public static double SPIN_UP_SECONDS = 1.0;
     public static double SETTLE_SECONDS = 0.3;
     public static double READY_BAND = 0.03;
@@ -86,9 +86,11 @@ public class Meet0MainTeleOp extends LinearOpMode {
 
         double rpm = SHOOTER_RPM, power = SHOOTER_POWER, boost = NECTAR_BOOST;
         boolean shooterOn = false;
-        boolean lastA = false, lastUp = false, lastDown = false, lastLeft = false, lastRight = false, lastBack = false;
+        boolean lastUp = false, lastDown = false, lastLeft = false, lastRight = false, lastBack = false, lastLT = false;
         double lastPower = 0, waitFor = SPIN_UP_SECONDS;
         ElapsedTime sinceChange = new ElapsedTime();
+        ElapsedTime clock = new ElapsedTime();
+        double ejectUntil = 0;
         String mode = useEncoders() ? "with encoders" : "no encoders";
 
         telemetry.addData("MAIN TeleOp", mode);
@@ -114,7 +116,8 @@ public class Meet0MainTeleOp extends LinearOpMode {
             frontRight.setPower(frontRightPower);
             backRight.setPower(backRightPower);
 
-            if (gamepad1.a && !lastA) shooterOn = !shooterOn;
+            if (gamepad1.a || gamepad2.a) shooterOn = true;
+            if (gamepad1.b || gamepad2.b) shooterOn = false;
             if (gamepad1.dpad_up && !lastUp) {
                 if (useEncoders()) rpm += RPM_STEP;
                 else power = Math.min(1.0, power + POWER_STEP);
@@ -130,7 +133,6 @@ public class Meet0MainTeleOp extends LinearOpMode {
                 power = SHOOTER_POWER;
                 boost = NECTAR_BOOST;
             }
-            lastA = gamepad1.a;
             lastUp = gamepad1.dpad_up;
             lastDown = gamepad1.dpad_down;
             lastLeft = gamepad1.dpad_left;
@@ -167,10 +169,11 @@ public class Meet0MainTeleOp extends LinearOpMode {
                 shooter = String.format("power %.2f%s  battery %.1f V", target, nectar ? " (NECTAR)" : "", volts);
             }
 
-            boolean feed = AUTO_FEED && shoot && ready;
-            if (gamepad1.right_trigger > 0.1 || gamepad2.right_trigger > 0.1 || feed) intake.setPower(1.0);
-            else if (gamepad1.left_trigger > 0.1 || gamepad2.left_trigger > 0.1) intake.setPower(-1.0);
-            else intake.setPower(0.0);
+            boolean lt = gamepad1.left_trigger > 0.1 || gamepad2.left_trigger > 0.1;
+            if (lt && !lastLT) ejectUntil = clock.seconds() + EJECT_SECONDS;
+            lastLT = lt;
+            boolean ejecting = clock.seconds() < ejectUntil;
+            intake.setPower(ejecting ? -1.0 : 1.0);
             if (shoot && !ready) gamepad1.rumble(50);
 
             telemetry.addData("MAIN TeleOp", mode);
@@ -182,10 +185,11 @@ public class Meet0MainTeleOp extends LinearOpMode {
                 telemetry.addData("speeds", "POLLEN power %.2f, NECTAR +%.0f%% = %.2f", power, boost * 100, power * (1 + boost));
                 telemetry.addData("put in the code", "SHOOTER_POWER = %.2f, NECTAR_BOOST = %.2f", power, boost);
             }
+            telemetry.addData("intake", ejecting ? "REVERSE" : "on");
             telemetry.addData("Heading (Deg)", "%.1f", Math.toDegrees(botHeading));
             telemetry.addData("FL / FR", "%.2f / %.2f", frontLeftPower, frontRightPower);
             telemetry.addData("BL / BR", "%.2f / %.2f", backLeftPower, backRightPower);
-            telemetry.addData("controls", "RB shoot, LB NECTAR, A shooter on/off, RT intake, LT eject, Y reset heading, "
+            telemetry.addData("controls", "A shooter on, B shooter off, RB shoot, LB NECTAR, LT reverse intake 1 s, Y reset heading, "
                     + "dpad up/down POLLEN speed, dpad left/right NECTAR boost, back reset");
             telemetry.update();
         }

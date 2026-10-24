@@ -49,6 +49,16 @@ public class Meet0ParkAutoRed extends LinearOpMode {
             m.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         }
 
+        DcMotorEx outtake1 = hardwareMap.get(DcMotorEx.class, "outtake1");
+        DcMotorEx outtake2 = hardwareMap.get(DcMotorEx.class, "outtake2");
+        // same as the MAIN TeleOp
+        outtake1.setDirection(DcMotorSimple.Direction.FORWARD);
+        outtake2.setDirection(DcMotorSimple.Direction.REVERSE);
+        for (DcMotorEx m : new DcMotorEx[] {outtake1, outtake2}) {
+            m.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+            m.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        }
+
         imu = hardwareMap.get(IMU.class, "imu");
         // which way the control hub logo and usb ports face on the robot
         imu.initialize(new IMU.Parameters(new RevHubOrientationOnRobot(
@@ -85,14 +95,20 @@ public class Meet0ParkAutoRed extends LinearOpMode {
         imu.resetYaw();
         double volts = battery.getVoltage();
         powerScale = volts > 6 ? 12.0 / volts : 1;
+        double shooter = Math.min(1.0, Meet0MainTeleOp.SHOOTER_POWER * powerScale);
+        outtake1.setPower(shooter);
+        outtake2.setPower(shooter);
 
         hold(DELAY_SECONDS);
         drive(1, 0, FORWARD_SECONDS);
         hold(0.25);
         drive(0, STRAFE_LEFT ? -1 : 1, STRAFE_SECONDS);
 
-        telemetry.addLine("parked");
+        telemetry.addLine("parked, outtake on");
         telemetry.update();
+        while (opModeIsActive()) {
+            idle();
+        }
     }
 
     private void drive(double y, double x, double seconds) {
