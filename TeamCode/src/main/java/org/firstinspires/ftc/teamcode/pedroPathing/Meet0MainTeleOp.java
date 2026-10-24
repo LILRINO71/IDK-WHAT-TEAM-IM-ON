@@ -56,9 +56,9 @@ public class Meet0MainTeleOp extends LinearOpMode {
         frontRight.setDirection(DcMotorSimple.Direction.FORWARD);
         backRight.setDirection(DcMotorSimple.Direction.FORWARD);
         intake.setDirection(DcMotorSimple.Direction.FORWARD);
-        // flip one of these if the two outtake motors fight each other
+        // if balls come out backwards, swap which of these two is REVERSE
         outtake1.setDirection(DcMotorSimple.Direction.FORWARD);
-        outtake2.setDirection(DcMotorSimple.Direction.FORWARD);
+        outtake2.setDirection(DcMotorSimple.Direction.REVERSE);
 
         for (DcMotorEx m : new DcMotorEx[] {frontLeft, backLeft, frontRight, backRight}) {
             m.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
