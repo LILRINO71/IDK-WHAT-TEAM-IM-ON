@@ -116,31 +116,31 @@ public class Meet0MainTeleOp extends LinearOpMode {
             frontRight.setPower(frontRightPower);
             backRight.setPower(backRightPower);
 
-            if (gamepad1.a || gamepad2.a) shooterOn = true;
-            if (gamepad1.b || gamepad2.b) shooterOn = false;
-            if (gamepad1.dpad_up && !lastUp) {
+            if (gamepad2.a) shooterOn = true;
+            if (gamepad2.b) shooterOn = false;
+            if (gamepad2.dpad_up && !lastUp) {
                 if (useEncoders()) rpm += RPM_STEP;
                 else power = Math.min(1.0, power + POWER_STEP);
             }
-            if (gamepad1.dpad_down && !lastDown) {
+            if (gamepad2.dpad_down && !lastDown) {
                 if (useEncoders()) rpm = Math.max(0, rpm - RPM_STEP);
                 else power = Math.max(0, power - POWER_STEP);
             }
-            if (gamepad1.dpad_right && !lastRight) boost += BOOST_STEP;
-            if (gamepad1.dpad_left && !lastLeft) boost = Math.max(0, boost - BOOST_STEP);
-            if (gamepad1.back && !lastBack) {
+            if (gamepad2.dpad_right && !lastRight) boost += BOOST_STEP;
+            if (gamepad2.dpad_left && !lastLeft) boost = Math.max(0, boost - BOOST_STEP);
+            if (gamepad2.back && !lastBack) {
                 rpm = SHOOTER_RPM;
                 power = SHOOTER_POWER;
                 boost = NECTAR_BOOST;
             }
-            lastUp = gamepad1.dpad_up;
-            lastDown = gamepad1.dpad_down;
-            lastLeft = gamepad1.dpad_left;
-            lastRight = gamepad1.dpad_right;
-            lastBack = gamepad1.back;
+            lastUp = gamepad2.dpad_up;
+            lastDown = gamepad2.dpad_down;
+            lastLeft = gamepad2.dpad_left;
+            lastRight = gamepad2.dpad_right;
+            lastBack = gamepad2.back;
 
-            boolean shoot = gamepad1.right_bumper || gamepad2.right_bumper;
-            boolean nectar = gamepad1.left_bumper || gamepad2.left_bumper;
+            boolean shoot = gamepad2.right_bumper;
+            boolean nectar = gamepad2.left_bumper;
             boolean spin = shooterOn || shoot;
             double scale = nectar ? 1 + boost : 1;
             double volts = battery.getVoltage();
@@ -169,12 +169,12 @@ public class Meet0MainTeleOp extends LinearOpMode {
                 shooter = String.format("power %.2f%s  battery %.1f V", target, nectar ? " (NECTAR)" : "", volts);
             }
 
-            boolean lt = gamepad1.left_trigger > 0.1 || gamepad2.left_trigger > 0.1;
+            boolean lt = gamepad2.left_trigger > 0.1;
             if (lt && !lastLT) ejectUntil = clock.seconds() + EJECT_SECONDS;
             lastLT = lt;
             boolean ejecting = clock.seconds() < ejectUntil;
             intake.setPower(ejecting ? -1.0 : 1.0);
-            if (shoot && !ready) gamepad1.rumble(50);
+            if (shoot && !ready) gamepad2.rumble(50);
 
             telemetry.addData("MAIN TeleOp", mode);
             telemetry.addData("shooter", "%s  %s", ready ? "READY" : (spin ? "spinning up" : "off"), shooter);
@@ -189,7 +189,7 @@ public class Meet0MainTeleOp extends LinearOpMode {
             telemetry.addData("Heading (Deg)", "%.1f", Math.toDegrees(botHeading));
             telemetry.addData("FL / FR", "%.2f / %.2f", frontLeftPower, frontRightPower);
             telemetry.addData("BL / BR", "%.2f / %.2f", backLeftPower, backRightPower);
-            telemetry.addData("controls", "A shooter on, B shooter off, RB shoot, LB NECTAR, LT reverse intake 1 s, Y reset heading, "
+            telemetry.addData("controls", "gamepad 1: drive, Y reset heading. gamepad 2: A shooter on, B off, RB shoot, LB NECTAR, LT reverse intake 1 s, "
                     + "dpad up/down POLLEN speed, dpad left/right NECTAR boost, back reset");
             telemetry.update();
         }
