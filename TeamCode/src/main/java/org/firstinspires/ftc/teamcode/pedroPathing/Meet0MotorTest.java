@@ -14,7 +14,7 @@ public class Meet0MotorTest extends LinearOpMode {
 
     // same names and directions as the MAIN TeleOp
     private static final String[] NAMES = {"FL", "BL", "FR", "BR", "intake", "outtake1", "outtake2"};
-    private static final boolean[] REVERSED = {true, true, false, false, false, false, true};
+    private static final boolean[] REVERSED = {true, true, false, false, true, true, false};
 
     @Override
     public void runOpMode() {

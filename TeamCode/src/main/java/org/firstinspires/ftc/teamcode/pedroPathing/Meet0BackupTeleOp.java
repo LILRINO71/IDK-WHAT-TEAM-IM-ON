@@ -38,10 +38,10 @@ public class Meet0BackupTeleOp extends LinearOpMode {
         backLeft.setDirection(DcMotorSimple.Direction.REVERSE);
         frontRight.setDirection(DcMotorSimple.Direction.FORWARD);
         backRight.setDirection(DcMotorSimple.Direction.FORWARD);
-        intake.setDirection(DcMotorSimple.Direction.FORWARD);
+        intake.setDirection(DcMotorSimple.Direction.REVERSE);
         // if balls come out backwards, swap which of these two is REVERSE
-        outtake1.setDirection(DcMotorSimple.Direction.FORWARD);
-        outtake2.setDirection(DcMotorSimple.Direction.REVERSE);
+        outtake1.setDirection(DcMotorSimple.Direction.REVERSE);
+        outtake2.setDirection(DcMotorSimple.Direction.FORWARD);
 
         // Set Zero Power Behavior
         frontLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);

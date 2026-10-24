@@ -16,12 +16,12 @@ public class Meet0MainTeleOp extends LinearOpMode {
 
     public static double STICK_DEADBAND = 0.05;
 
-    // shooter speed without encoders, as power on a 12 V battery (0.55 is about 3300 rpm)
-    public static double SHOOTER_POWER = 0.55;
-    public static double POWER_STEP = 0.01;
+    // shooter speed without encoders, as power on a 12 V battery (0.75 is about 4500 rpm)
+    public static double SHOOTER_POWER = 0.75;
+    public static double POWER_STEP = 0.02;
     // shooter speed with encoders, in motor rpm
-    public static double SHOOTER_RPM = 3300;
-    public static double RPM_STEP = 50;
+    public static double SHOOTER_RPM = 4500;
+    public static double RPM_STEP = 100;
     // extra shooter speed while LB is held for a NECTAR, copy the number the driver hub shows
     public static double NECTAR_BOOST = 0.04;
     public static double BOOST_STEP = 0.01;
@@ -55,10 +55,10 @@ public class Meet0MainTeleOp extends LinearOpMode {
         backLeft.setDirection(DcMotorSimple.Direction.REVERSE);
         frontRight.setDirection(DcMotorSimple.Direction.FORWARD);
         backRight.setDirection(DcMotorSimple.Direction.FORWARD);
-        intake.setDirection(DcMotorSimple.Direction.FORWARD);
+        intake.setDirection(DcMotorSimple.Direction.REVERSE);
         // if balls come out backwards, swap which of these two is REVERSE
-        outtake1.setDirection(DcMotorSimple.Direction.FORWARD);
-        outtake2.setDirection(DcMotorSimple.Direction.REVERSE);
+        outtake1.setDirection(DcMotorSimple.Direction.REVERSE);
+        outtake2.setDirection(DcMotorSimple.Direction.FORWARD);
 
         for (DcMotorEx m : new DcMotorEx[] {frontLeft, backLeft, frontRight, backRight}) {
             m.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
