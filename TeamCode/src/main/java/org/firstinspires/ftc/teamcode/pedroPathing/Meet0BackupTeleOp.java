@@ -63,7 +63,7 @@ public class Meet0BackupTeleOp extends LinearOpMode {
         // which way the control hub logo and usb ports face on the robot
         IMU.Parameters parameters = new IMU.Parameters(new RevHubOrientationOnRobot(
                 RevHubOrientationOnRobot.LogoFacingDirection.LEFT,
-                RevHubOrientationOnRobot.UsbFacingDirection.UP
+                RevHubOrientationOnRobot.UsbFacingDirection.DOWN
         ));
         imu.initialize(parameters);
         imu.resetYaw();

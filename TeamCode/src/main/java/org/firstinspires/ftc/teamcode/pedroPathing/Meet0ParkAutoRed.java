@@ -60,7 +60,7 @@ public class Meet0ParkAutoRed extends LinearOpMode {
         // which way the control hub logo and usb ports face on the robot
         imu.initialize(new IMU.Parameters(new RevHubOrientationOnRobot(
                 RevHubOrientationOnRobot.LogoFacingDirection.LEFT,
-                RevHubOrientationOnRobot.UsbFacingDirection.UP)));
+                RevHubOrientationOnRobot.UsbFacingDirection.DOWN)));
         imu.resetYaw();
         VoltageSensor battery = hardwareMap.voltageSensor.iterator().next();
 

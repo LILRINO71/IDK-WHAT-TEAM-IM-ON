@@ -81,7 +81,7 @@ public class Meet0MainTeleOp extends LinearOpMode {
         // which way the control hub logo and usb ports face on the robot
         imu.initialize(new IMU.Parameters(new RevHubOrientationOnRobot(
                 RevHubOrientationOnRobot.LogoFacingDirection.LEFT,
-                RevHubOrientationOnRobot.UsbFacingDirection.UP)));
+                RevHubOrientationOnRobot.UsbFacingDirection.DOWN)));
         imu.resetYaw();
         VoltageSensor battery = hardwareMap.voltageSensor.iterator().next();
 
@@ -185,6 +185,8 @@ public class Meet0MainTeleOp extends LinearOpMode {
             }
             telemetry.addData("intake", intakeOut ? "REVERSE" : (intakeIn ? "in" : "off"));
             telemetry.addData("Heading (Deg)", "%.1f", Math.toDegrees(botHeading));
+            // right stick right should only change RX, left stick up should only change LY
+            telemetry.addData("sticks", "LX %.2f  LY %.2f  RX %.2f", gamepad1.left_stick_x, -gamepad1.left_stick_y, gamepad1.right_stick_x);
             telemetry.addData("FL / FR", "%.2f / %.2f", frontLeftPower, frontRightPower);
             telemetry.addData("BL / BR", "%.2f / %.2f", backLeftPower, backRightPower);
             telemetry.addData("controls", "gamepad 1: drive, Y reset heading. gamepad 2: A shooter on, B off, RB shoot, LB NECTAR, hold RT intake, hold LT reverse, "
