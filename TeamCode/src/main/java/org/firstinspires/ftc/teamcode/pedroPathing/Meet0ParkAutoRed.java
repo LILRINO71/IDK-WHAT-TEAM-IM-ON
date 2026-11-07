@@ -53,7 +53,7 @@ public class Meet0ParkAutoRed extends LinearOpMode {
         DcMotorEx outtake2 = hardwareMap.get(DcMotorEx.class, "outtake2");
         // same as the MAIN TeleOp
         outtake1.setDirection(DcMotorSimple.Direction.FORWARD);
-        outtake2.setDirection(DcMotorSimple.Direction.REVERSE);
+        outtake2.setDirection(DcMotorSimple.Direction.FORWARD);
         for (DcMotorEx m : new DcMotorEx[] {outtake1, outtake2}) {
             m.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
             m.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);

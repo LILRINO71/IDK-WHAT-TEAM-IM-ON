@@ -26,8 +26,6 @@ public class Meet0MainTeleOp extends LinearOpMode {
     public static double NECTAR_BOOST = 0.04;
     public static double BOOST_STEP = 0.01;
 
-    // how long the intake runs backwards after LT is pressed
-    public static double EJECT_SECONDS = 1.0;
     public static double SPIN_UP_SECONDS = 1.0;
     public static double SETTLE_SECONDS = 0.3;
     public static double READY_BAND = 0.03;
@@ -58,7 +56,7 @@ public class Meet0MainTeleOp extends LinearOpMode {
         intake.setDirection(DcMotorSimple.Direction.REVERSE);
         // if balls come out backwards, swap which of these two is REVERSE
         outtake1.setDirection(DcMotorSimple.Direction.FORWARD);
-        outtake2.setDirection(DcMotorSimple.Direction.REVERSE);
+        outtake2.setDirection(DcMotorSimple.Direction.FORWARD);
 
         for (DcMotorEx m : new DcMotorEx[] {frontLeft, backLeft, frontRight, backRight}) {
             m.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
@@ -86,11 +84,9 @@ public class Meet0MainTeleOp extends LinearOpMode {
 
         double rpm = SHOOTER_RPM, power = SHOOTER_POWER, boost = NECTAR_BOOST;
         boolean shooterOn = false;
-        boolean lastUp = false, lastDown = false, lastLeft = false, lastRight = false, lastBack = false, lastLT = false;
+        boolean lastUp = false, lastDown = false, lastLeft = false, lastRight = false, lastBack = false;
         double lastPower = 0, waitFor = SPIN_UP_SECONDS;
         ElapsedTime sinceChange = new ElapsedTime();
-        ElapsedTime clock = new ElapsedTime();
-        double ejectUntil = 0;
         String mode = useEncoders() ? "with encoders" : "no encoders";
 
         telemetry.addData("MAIN TeleOp", mode);
@@ -169,11 +165,9 @@ public class Meet0MainTeleOp extends LinearOpMode {
                 shooter = String.format("power %.2f%s  battery %.1f V", target, nectar ? " (NECTAR)" : "", volts);
             }
 
-            boolean lt = gamepad2.left_trigger > 0.1;
-            if (lt && !lastLT) ejectUntil = clock.seconds() + EJECT_SECONDS;
-            lastLT = lt;
-            boolean ejecting = clock.seconds() < ejectUntil;
-            intake.setPower(ejecting ? -1.0 : 1.0);
+            boolean intakeIn = gamepad2.right_trigger > 0.1;
+            boolean intakeOut = gamepad2.left_trigger > 0.1;
+            intake.setPower(intakeOut ? -1.0 : (intakeIn ? 1.0 : 0.0));
             if (shoot && !ready) gamepad2.rumble(50);
 
             telemetry.addData("MAIN TeleOp", mode);
@@ -185,11 +179,11 @@ public class Meet0MainTeleOp extends LinearOpMode {
                 telemetry.addData("speeds", "POLLEN power %.2f, NECTAR +%.0f%% = %.2f", power, boost * 100, power * (1 + boost));
                 telemetry.addData("put in the code", "SHOOTER_POWER = %.2f, NECTAR_BOOST = %.2f", power, boost);
             }
-            telemetry.addData("intake", ejecting ? "REVERSE" : "on");
+            telemetry.addData("intake", intakeOut ? "REVERSE" : (intakeIn ? "in" : "off"));
             telemetry.addData("Heading (Deg)", "%.1f", Math.toDegrees(botHeading));
             telemetry.addData("FL / FR", "%.2f / %.2f", frontLeftPower, frontRightPower);
             telemetry.addData("BL / BR", "%.2f / %.2f", backLeftPower, backRightPower);
-            telemetry.addData("controls", "gamepad 1: drive, Y reset heading. gamepad 2: A shooter on, B off, RB shoot, LB NECTAR, LT reverse intake 1 s, "
+            telemetry.addData("controls", "gamepad 1: drive, Y reset heading. gamepad 2: A shooter on, B off, RB shoot, LB NECTAR, hold RT intake, hold LT reverse, "
                     + "dpad up/down POLLEN speed, dpad left/right NECTAR boost, back reset");
             telemetry.update();
         }
