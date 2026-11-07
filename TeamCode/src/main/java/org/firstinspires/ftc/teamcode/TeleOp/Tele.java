@@ -8,6 +8,8 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.hardware.VoltageSensor;
+import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 
@@ -19,12 +21,12 @@ public class Tele extends LinearOpMode {
     public static double RPM_STEP = 100;
     // 28 for a bare goBILDA or REV motor
     public static double TICKS_PER_REV = 28;
-    // copy these from the Shooter PID Tuner
-    public static double SHOOTER_P = 10;
-    public static double SHOOTER_I = 0;
-    public static double SHOOTER_F = 12;
     // shooter counts as ready when it is this close to the target
-    public static double READY_BAND = 0.03;
+    public static double READY_BAND = 0.05;
+    // false runs the shooter on power instead, used if the encoder is not plugged in
+    public static boolean USE_ENCODER = true;
+    // power used without the encoder, on a 12 V battery
+    public static double SHOOTER_POWER = 0.8;
 
     @Override
     public void runOpMode() {
@@ -49,7 +51,7 @@ public class Tele extends LinearOpMode {
         shooter.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
         shooter.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         shooter.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        shooter.setVelocityPIDFCoefficients(SHOOTER_P, SHOOTER_I, 0, SHOOTER_F);
+        VoltageSensor battery = hardwareMap.voltageSensor.iterator().next();
 
         IMU imu = hardwareMap.get(IMU.class, "imu");
         imu.initialize(new IMU.Parameters(new RevHubOrientationOnRobot(
@@ -59,6 +61,8 @@ public class Tele extends LinearOpMode {
 
         double rpm = SHOOTER_RPM;
         boolean lastLeft = false, lastRight = false;
+        boolean useEncoder = USE_ENCODER;
+        ElapsedTime spinTime = new ElapsedTime();
 
         telemetry.addLine("ready");
         telemetry.update();
@@ -106,9 +110,23 @@ public class Tele extends LinearOpMode {
 
             // hold RT to spin the shooter, the encoder keeps it at the same rpm every shot
             boolean spin = gamepad2.right_trigger_pressed;
-            shooter.setVelocity(spin ? rpm * TICKS_PER_REV / 60 : 0);
+            if (!spin) spinTime.reset();
             double shooterRpm = shooter.getVelocity() * 60 / TICKS_PER_REV;
-            boolean ready = spin && Math.abs(shooterRpm - rpm) < rpm * READY_BAND;
+            // encoder reads nothing after a second of spinning, switch to power so it does not run away
+            if (useEncoder && spin && spinTime.seconds() > 1 && Math.abs(shooterRpm) < 50) {
+                useEncoder = false;
+                shooter.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+            }
+            boolean ready;
+            if (useEncoder) {
+                shooter.setVelocity(spin ? rpm * TICKS_PER_REV / 60 : 0);
+                ready = spin && Math.abs(shooterRpm - rpm) < rpm * READY_BAND;
+            } else {
+                double volts = battery.getVoltage();
+                double power = volts > 6 ? Math.min(1.0, SHOOTER_POWER * 12.0 / volts) : SHOOTER_POWER;
+                shooter.setPower(spin ? power : 0);
+                ready = spin && spinTime.seconds() > 1;
+            }
             if (spin && !ready) gamepad2.rumble(50);
 
             if (gamepad1.a) {
@@ -124,7 +142,8 @@ public class Tele extends LinearOpMode {
                 adj.setPosition(.5);
             }
 
-            telemetry.addData("shooter", "%s  %.0f / %.0f rpm", ready ? "READY" : (spin ? "spinning up" : "off"), shooterRpm, rpm);
+            telemetry.addData("shooter", "%s  %.0f / %.0f rpm  %s", ready ? "READY" : (spin ? "spinning up" : "off"),
+                    shooterRpm, rpm, useEncoder ? "" : "(NO ENCODER, power mode)");
             telemetry.addData("put in the code", "SHOOTER_RPM = %.0f", rpm);
             telemetry.addData("gate", gate.getPosition());
             telemetry.addData("adj", adj.getPosition());
