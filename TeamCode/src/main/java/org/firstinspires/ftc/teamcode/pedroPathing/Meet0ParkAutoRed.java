@@ -95,7 +95,7 @@ public class Meet0ParkAutoRed extends LinearOpMode {
         imu.resetYaw();
         double volts = battery.getVoltage();
         powerScale = volts > 6 ? 12.0 / volts : 1;
-        double shooter = Math.min(1.0, Meet0MainTeleOp.SHOOTER_POWER * powerScale);
+        double shooter = Meet0MainTeleOp.SHOOTER_POWER >= 1.0 ? 1.0 : Math.min(1.0, Meet0MainTeleOp.SHOOTER_POWER * powerScale);
         outtake1.setPower(shooter);
         outtake2.setPower(shooter);
 

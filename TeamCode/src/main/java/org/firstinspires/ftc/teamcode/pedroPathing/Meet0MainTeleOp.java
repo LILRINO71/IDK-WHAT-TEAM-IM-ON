@@ -158,7 +158,8 @@ public class Meet0MainTeleOp extends LinearOpMode {
                     sinceChange.reset();
                     lastPower = target;
                 }
-                double out = volts > 6 ? Math.min(1.0, target * 12.0 / volts) : target;
+                // full power always gets 1.0, lower speeds get battery compensated
+                double out = target >= 1.0 || volts <= 6 ? Math.min(1.0, target) : Math.min(1.0, target * 12.0 / volts);
                 outtake1.setPower(out);
                 outtake2.setPower(out);
                 ready = spin && sinceChange.seconds() >= waitFor;
