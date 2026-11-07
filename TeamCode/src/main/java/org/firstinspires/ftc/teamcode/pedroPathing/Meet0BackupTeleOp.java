@@ -34,10 +34,7 @@ public class Meet0BackupTeleOp extends LinearOpMode {
         DcMotorEx outtake2 = hardwareMap.get(DcMotorEx.class, "outtake2");
 
         // Set Motor Directions
-        frontLeft.setDirection(DcMotorSimple.Direction.REVERSE);
-        backLeft.setDirection(DcMotorSimple.Direction.REVERSE);
-        frontRight.setDirection(DcMotorSimple.Direction.FORWARD);
-        backRight.setDirection(DcMotorSimple.Direction.FORWARD);
+        Meet0MainTeleOp.setDriveDirections(frontLeft, backLeft, frontRight, backRight);
         intake.setDirection(DcMotorSimple.Direction.REVERSE);
         // if balls come out backwards, swap which of these two is REVERSE
         outtake1.setDirection(DcMotorSimple.Direction.FORWARD);

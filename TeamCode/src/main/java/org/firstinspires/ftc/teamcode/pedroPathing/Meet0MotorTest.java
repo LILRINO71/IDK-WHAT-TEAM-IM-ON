@@ -16,6 +16,26 @@ public class Meet0MotorTest extends LinearOpMode {
     private static final String[] NAMES = {"FL", "BL", "FR", "BR", "intake", "outtake1", "outtake2"};
     private static final boolean[] REVERSED = {true, true, false, false, true, false, false};
 
+    // wheels use the MAIN TeleOp's directions so a flip here carries over until the app restarts
+    private static boolean reversed(int i) {
+        switch (i) {
+            case 0: return Meet0MainTeleOp.FL_REVERSE;
+            case 1: return Meet0MainTeleOp.BL_REVERSE;
+            case 2: return Meet0MainTeleOp.FR_REVERSE;
+            case 3: return Meet0MainTeleOp.BR_REVERSE;
+            default: return REVERSED[i];
+        }
+    }
+
+    private static void flip(int i) {
+        switch (i) {
+            case 0: Meet0MainTeleOp.FL_REVERSE = !Meet0MainTeleOp.FL_REVERSE; break;
+            case 1: Meet0MainTeleOp.BL_REVERSE = !Meet0MainTeleOp.BL_REVERSE; break;
+            case 2: Meet0MainTeleOp.FR_REVERSE = !Meet0MainTeleOp.FR_REVERSE; break;
+            default: Meet0MainTeleOp.BR_REVERSE = !Meet0MainTeleOp.BR_REVERSE; break;
+        }
+    }
+
     @Override
     public void runOpMode() {
         DcMotorEx[] motors = new DcMotorEx[NAMES.length];
@@ -26,7 +46,7 @@ public class Meet0MotorTest extends LinearOpMode {
                 ports[i] = "NOT IN CONFIG";
                 continue;
             }
-            motors[i].setDirection(REVERSED[i] ? DcMotorSimple.Direction.REVERSE : DcMotorSimple.Direction.FORWARD);
+            motors[i].setDirection(reversed(i) ? DcMotorSimple.Direction.REVERSE : DcMotorSimple.Direction.FORWARD);
             motors[i].setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
             Set<String> hub = hardwareMap.getNamesOf(motors[i].getController());
             ports[i] = (hub.isEmpty() ? motors[i].getController().getConnectionInfo() : hub.iterator().next())
@@ -42,7 +62,7 @@ public class Meet0MotorTest extends LinearOpMode {
 
         int selected = 0;
         double power = 0.5;
-        boolean lastUp = false, lastDown = false, lastLeft = false, lastRight = false;
+        boolean lastUp = false, lastDown = false, lastLeft = false, lastRight = false, lastY = false;
 
         while (opModeIsActive()) {
             if (gamepad1.dpad_down && !lastDown) selected = (selected + 1) % NAMES.length;
@@ -53,6 +73,11 @@ public class Meet0MotorTest extends LinearOpMode {
             lastDown = gamepad1.dpad_down;
             lastLeft = gamepad1.dpad_left;
             lastRight = gamepad1.dpad_right;
+            if (gamepad1.y && !lastY && selected < 4 && motors[selected] != null) {
+                flip(selected);
+                motors[selected].setDirection(reversed(selected) ? DcMotorSimple.Direction.REVERSE : DcMotorSimple.Direction.FORWARD);
+            }
+            lastY = gamepad1.y;
 
             for (int i = 0; i < NAMES.length; i++) {
                 if (motors[i] == null) continue;
@@ -60,15 +85,21 @@ public class Meet0MotorTest extends LinearOpMode {
                 if (i == selected && gamepad1.a) p = power;
                 if (i == selected && gamepad1.b) p = -power;
                 if (i < 4 && gamepad1.x) p = power;
+                // RB should spin the robot right: left wheels forward, right wheels back
+                if (i < 4 && gamepad1.right_bumper) p = i < 2 ? power : -power;
                 motors[i].setPower(p);
             }
 
             telemetry.addLine("dpad up/down pick, dpad left/right power");
-            telemetry.addLine("hold A forward, B backward, X all 4 wheels forward");
+            telemetry.addLine("hold A forward, B backward, X all 4 wheels forward, RB turn right");
+            telemetry.addLine("X should roll the robot straight forward. a wheel going backward? pick it and press Y");
+            telemetry.addData("put in Meet0MainTeleOp", "FL_REVERSE = %b, BL_REVERSE = %b, FR_REVERSE = %b, BR_REVERSE = %b",
+                    Meet0MainTeleOp.FL_REVERSE, Meet0MainTeleOp.BL_REVERSE, Meet0MainTeleOp.FR_REVERSE, Meet0MainTeleOp.BR_REVERSE);
             telemetry.addData("power", "%.1f", power);
             for (int i = 0; i < NAMES.length; i++) {
                 String amps = motors[i] == null ? "-" : String.format("%.2f A", motors[i].getCurrent(CurrentUnit.AMPS));
-                telemetry.addData((i == selected ? "> " : "  ") + NAMES[i], "%s   %s", ports[i], amps);
+                String dir = reversed(i) ? "REVERSE" : "FORWARD";
+                telemetry.addData((i == selected ? "> " : "  ") + NAMES[i], "%s   %s   %s", ports[i], amps, dir);
             }
             telemetry.update();
         }

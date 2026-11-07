@@ -40,10 +40,7 @@ public class Meet0ParkAutoRed extends LinearOpMode {
         backLeft = hardwareMap.get(DcMotorEx.class, "BL");
         frontRight = hardwareMap.get(DcMotorEx.class, "FR");
         backRight = hardwareMap.get(DcMotorEx.class, "BR");
-        frontLeft.setDirection(DcMotorSimple.Direction.REVERSE);
-        backLeft.setDirection(DcMotorSimple.Direction.REVERSE);
-        frontRight.setDirection(DcMotorSimple.Direction.FORWARD);
-        backRight.setDirection(DcMotorSimple.Direction.FORWARD);
+        Meet0MainTeleOp.setDriveDirections(frontLeft, backLeft, frontRight, backRight);
         for (DcMotorEx m : new DcMotorEx[] {frontLeft, backLeft, frontRight, backRight}) {
             m.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
             m.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);

@@ -16,6 +16,12 @@ public class Meet0MainTeleOp extends LinearOpMode {
 
     public static double STICK_DEADBAND = 0.05;
 
+    // wheel directions, flip them in the Motor Test with Y and copy the numbers here
+    public static boolean FL_REVERSE = true;
+    public static boolean BL_REVERSE = true;
+    public static boolean FR_REVERSE = false;
+    public static boolean BR_REVERSE = false;
+
     // shooter speed without encoders, as power on a 12 V battery (1.0 is full power)
     public static double SHOOTER_POWER = 1.0;
     public static double POWER_STEP = 0.02;
@@ -49,10 +55,7 @@ public class Meet0MainTeleOp extends LinearOpMode {
         DcMotorEx outtake1 = hardwareMap.get(DcMotorEx.class, "outtake1");
         DcMotorEx outtake2 = hardwareMap.get(DcMotorEx.class, "outtake2");
 
-        frontLeft.setDirection(DcMotorSimple.Direction.REVERSE);
-        backLeft.setDirection(DcMotorSimple.Direction.REVERSE);
-        frontRight.setDirection(DcMotorSimple.Direction.FORWARD);
-        backRight.setDirection(DcMotorSimple.Direction.FORWARD);
+        setDriveDirections(frontLeft, backLeft, frontRight, backRight);
         intake.setDirection(DcMotorSimple.Direction.REVERSE);
         // if balls come out backwards, swap which of these two is REVERSE
         outtake1.setDirection(DcMotorSimple.Direction.FORWARD);
@@ -188,6 +191,13 @@ public class Meet0MainTeleOp extends LinearOpMode {
                     + "dpad up/down POLLEN speed, dpad left/right NECTAR boost, back reset");
             telemetry.update();
         }
+    }
+
+    static void setDriveDirections(DcMotorEx fl, DcMotorEx bl, DcMotorEx fr, DcMotorEx br) {
+        fl.setDirection(FL_REVERSE ? DcMotorSimple.Direction.REVERSE : DcMotorSimple.Direction.FORWARD);
+        bl.setDirection(BL_REVERSE ? DcMotorSimple.Direction.REVERSE : DcMotorSimple.Direction.FORWARD);
+        fr.setDirection(FR_REVERSE ? DcMotorSimple.Direction.REVERSE : DcMotorSimple.Direction.FORWARD);
+        br.setDirection(BR_REVERSE ? DcMotorSimple.Direction.REVERSE : DcMotorSimple.Direction.FORWARD);
     }
 
     private double applyDeadband(double value) {
