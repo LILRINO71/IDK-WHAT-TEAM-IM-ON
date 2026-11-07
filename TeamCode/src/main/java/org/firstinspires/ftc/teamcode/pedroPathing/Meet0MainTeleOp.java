@@ -19,8 +19,8 @@ public class Meet0MainTeleOp extends LinearOpMode {
     // wheel directions, flip them in the Motor Test with Y and copy the numbers here
     public static boolean FL_REVERSE = true;
     public static boolean BL_REVERSE = true;
-    public static boolean FR_REVERSE = false;
-    public static boolean BR_REVERSE = false;
+    public static boolean FR_REVERSE = true;
+    public static boolean BR_REVERSE = true;
 
     // shooter speed without encoders, as power on a 12 V battery (1.0 is full power)
     public static double SHOOTER_POWER = 1.0;
