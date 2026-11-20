@@ -1,0 +1,24 @@
+name: simbench
+
+# Runs every OpMode in the simulator on each push. A red X means an OpMode stops on an error.
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  opmodes:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Get FTC SimBench Pro
+        run: git clone --depth 1 https://github.com/LILRINO71/ftc-simbench-pro.git ../ftc-simbench-pro
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Run every OpMode
+        run: node ../ftc-simbench-pro/tools/check-code.mjs TeamCode/src/main/java --summary "$GITHUB_STEP_SUMMARY"
